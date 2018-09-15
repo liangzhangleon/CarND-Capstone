@@ -1,6 +1,75 @@
+# System integration project
+
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
 
 Please use **one** of the two installation options, either native **or** docker installation.
+
+### Individual submission
+Name | Udacity account
+--- | ---
+Liang Zhang | liangzhangleon@outlook.com
+
+## ROS node introduction
+The following is the overall system architecture.
+
+![sys_architec](imgs/sys_architec.png)
+
+I will only introduce three nodes: waypoint_updater, dbw_note and tl_detector.
+### waypoint_updater
+Below input and output topics of this node is described.
+![sys_architec](imgs/waypoint_updater.png)
+
+In waypoint_updater.py, I completed this node in two steps.
+#### Step one: without traffic get_light_state
+Without traffic lights, the main functionality I implemented is calculating the next 50 waypoints ahead of the ego car based on the base waypoints. The important function is get_closest_waypoint_idx().
+
+#### Step two: with traffic light
+With traffic lights, once a traffic light is detected, a stopline_wp_idx is given. With this stopline_wp_idx, decelerate_waypoints(...) function is used to get a group deceleration waypoints with target speed gradually approaches zero.
+
+### dbw_node
+Below input and output topics of this node is described.
+![sys_architec](imgs/dbw_node.png)
+
+#### dbw_node.py
+In this file, the three callback functions are simple. One just needs to load and assign the messages.
+In the loop() functions, one call the controller.control(...) to calculate the brake, steering and throttle needed, then publish them.
+
+#### twist_controller.py
+I use YawController for steering and PID controller for throttle. The brake is computed via the formula
+```
+            brake = abs(decel) * self.vehicle_mass * self.wheel_radius
+```
+where decel is deceleration speed.
+
+### tl_detector
+Below input and output topics of this node is described.
+![sys_architec](imgs/tl_detector.png)
+#### tl_detector.py
+The main functionality of this node starts from image_cb(...), in which process_traffic_lights() function will find the closest traffic light and then determines the color of the traffic light.
+
+#### tl_classifier.py
+The tl_classifier will take the camera image as input, and load the trained Tensorflow model (simulation or site). The process to train the model will be explained in next section. The classifier will first pre-process the image, predict the color state, then output the state to tl_detector.
+
+#### Traffic light detection/classification model
+I followed instructions given in
+[Tensorflow's Object Detection API](https://github.com/coldKnight/TrafficLight_Detection-TensorFlowAPI).
+
+I used a pre-trained tensorflow model [here](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md). This model is called *ssd_mobilenet_v1_coco* in the COCO-trained models.
+
+The model is re-trained with the image dataset was downloaded from the [link](https://drive.google.com/file/d/0B-Eiyn-CUQtxdUZWMkFfQzdObUE/view?usp=sharing) given in this [repository](https://github.com/coldKnight/TrafficLight_Detection-TensorFlowAPI).
+
+
+
+## Note and outlook
+### Note
+* waypoint_updater does not give a warning or an error that it can not update waypoints in time. When I use a slow computer to run the simulation, the controller will not control the car properly when waypoints were not updated.
+
+### Outlook
+* The traffic light detector/classifier occasionally has false positive error for yellow object, which should be improved.  
+
+
+
+## Project instructions
 
 ### Native Installation
 

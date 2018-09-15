@@ -32,7 +32,6 @@ class Controller(object):
         self.decel_limit = decel_limit
         self.accel_limit = accel_limit
         self.wheel_radius = wheel_radius
-        # self.s_lpf = LowPassFilter(tau=3, ts=1)
 
         self.last_time = rospy.get_time()
 
@@ -44,7 +43,6 @@ class Controller(object):
 
         current_vel = self.vel_lpf.filt(current_vel)
         steering = self.yaw_controller.get_steering(linear_vel, angular_vel, current_vel)
-        # steering = self.s_lpf.filt(steering)
 
         vel_error = linear_vel - current_vel
         self.last_vel = current_vel
